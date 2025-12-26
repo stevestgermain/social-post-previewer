@@ -128,7 +128,7 @@ const App: React.FC = () => {
             <Share2 className="w-7 h-7" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
-            Social Post Previewer
+            Social Mockup Tool
           </h1>
           <p className="text-[13px] text-gray-500 max-w-[420px] font-normal leading-relaxed">
             Mock up your social media posts instantly. Upload an image, write your copy, and see how it looks across platforms before you publish.
