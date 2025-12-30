@@ -1,0 +1,5 @@
+{
+  "name": "Social Post Previewer",
+  "description": "A focused utility tool to generate social media post mockups from image and text inputs.",
+  "requestFramePermissions": []
+}
