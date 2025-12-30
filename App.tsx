@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Share2, 
   Image as ImageIcon, 
@@ -44,9 +44,36 @@ const App: React.FC = () => {
   const [platform, setPlatform] = useState<Platform>('instagram');
   const [postData, setPostData] = useState<PostData>(INITIAL_POST_DATA);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const mockupRef = useRef<HTMLDivElement>(null);
+
+  // Dark mode listener
+  useEffect(() => {
+    const handleThemeMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'THEME_CHANGE') {
+        setTheme(event.data.theme);
+      }
+    };
+
+    window.addEventListener('message', handleThemeMessage);
+    
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'REQUEST_THEME' }, '*');
+    }
+
+    return () => window.removeEventListener('message', handleThemeMessage);
+  }, []);
+
+  // Apply dark class
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,13 +111,12 @@ const App: React.FC = () => {
     setIsDownloading(true);
     
     try {
-      // Dynamic import to avoid type issues in this environment
       const html2canvas = (await import('html2canvas')).default;
       
       const canvas = await html2canvas(mockupRef.current, {
-        useCORS: true, // Needed for external images like picsum
-        scale: 2, // Higher resolution
-        backgroundColor: null, // Transparent background
+        useCORS: true,
+        scale: 2,
+        backgroundColor: null,
         logging: false,
       });
 
@@ -119,18 +145,18 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9fafb] pt-5 pb-12 px-4 flex justify-center items-start">
+    <div className="min-h-screen bg-white dark:bg-black pt-5 pb-12 px-4 flex justify-center items-start transition-colors duration-300">
       <div className="w-full max-w-[460px] mx-auto flex flex-col">
         
         {/* Header - The "Tilted Sticker" */}
         <header className="mb-6 relative z-10 flex flex-col items-center text-center">
-          <div className="w-14 h-14 bg-blue-600 rounded-2xl shadow-lg shadow-blue-600/10 mb-4 text-white transform -rotate-6 flex items-center justify-center hover:scale-105 duration-300 transition-transform cursor-default">
+          <div className="w-14 h-14 bg-blue-600 dark:bg-blue-500 rounded-2xl shadow-lg shadow-blue-600/10 dark:shadow-blue-500/20 mb-4 text-white transform -rotate-6 flex items-center justify-center hover:scale-105 duration-300 transition-transform cursor-default">
             <Share2 className="w-7 h-7" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight">
             Social Mockup Tool
           </h1>
-          <p className="text-[13px] text-gray-500 max-w-[420px] font-normal leading-relaxed">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 max-w-[420px] font-normal leading-relaxed">
             Mock up your social media posts instantly. Upload an image, write your copy, and see how it looks across platforms before you publish.
           </p>
         </header>
@@ -146,8 +172,8 @@ const App: React.FC = () => {
               <div 
                 className={`relative group w-16 h-16 shrink-0 rounded-full border-2 border-dashed transition-all duration-200 cursor-pointer overflow-hidden flex items-center justify-center
                   ${postData.avatar !== DEFAULT_AVATAR 
-                    ? 'border-blue-200 bg-blue-50/30' 
-                    : 'border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300'
+                    ? 'border-blue-200 dark:border-blue-700 bg-blue-50/30 dark:bg-blue-900/20' 
+                    : 'border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600'
                   }`}
                 onClick={() => avatarInputRef.current?.click()}
               >
@@ -166,7 +192,7 @@ const App: React.FC = () => {
                     </button>
                   </>
                 ) : (
-                  <div className="flex flex-col items-center justify-center text-gray-400 group-hover:text-blue-500 transition-colors">
+                  <div className="flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
                     <User className="w-5 h-5" />
                   </div>
                 )}
@@ -185,14 +211,14 @@ const App: React.FC = () => {
                    type="text" 
                    value={postData.username}
                    onChange={e => setPostData(prev => ({...prev, username: e.target.value}))}
-                   className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-900 placeholder:text-gray-400 outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500/20 transition-all"
+                   className="w-full bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-zinc-800 focus:ring-1 focus:ring-blue-500/20 transition-all"
                    placeholder="Name"
                  />
                  <input 
                    type="text" 
                    value={postData.handle}
                    onChange={e => setPostData(prev => ({...prev, handle: e.target.value}))}
-                   className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-500 placeholder:text-gray-400 outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500/20 transition-all"
+                   className="w-full bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-zinc-800 focus:ring-1 focus:ring-blue-500/20 transition-all"
                    placeholder="@handle"
                  />
               </div>
@@ -208,8 +234,8 @@ const App: React.FC = () => {
               <div 
                 className={`relative group rounded-2xl border-2 border-dashed transition-all duration-200 
                   ${postData.image 
-                    ? 'border-blue-200 bg-blue-50/30' 
-                    : 'border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300'
+                    ? 'border-blue-200 dark:border-blue-700 bg-blue-50/30 dark:bg-blue-900/20' 
+                    : 'border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600'
                   }`}
               >
                 {!postData.image ? (
@@ -217,19 +243,19 @@ const App: React.FC = () => {
                     className="flex flex-col items-center justify-center p-8 cursor-pointer"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center mb-3 text-blue-600">
+                    <div className="w-10 h-10 bg-white dark:bg-zinc-700 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-600 flex items-center justify-center mb-3 text-blue-600 dark:text-blue-400">
                       <UploadCloud className="w-5 h-5" />
                     </div>
-                    <span className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-1">Upload Visual</span>
-                    <span className="text-[10px] text-gray-400 font-medium">PNG, JPG up to 5MB</span>
+                    <span className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wide mb-1">Upload Visual</span>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">PNG, JPG up to 5MB</span>
                   </div>
                 ) : (
                   <div className="relative p-2">
-                     <div className="relative rounded-xl overflow-hidden shadow-sm aspect-video bg-gray-100">
+                     <div className="relative rounded-xl overflow-hidden shadow-sm aspect-video bg-gray-100 dark:bg-zinc-900">
                         <img src={postData.image} alt="Preview" className="w-full h-full object-cover" />
                         <button 
                           onClick={clearImage}
-                          className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur rounded-lg text-gray-500 hover:text-red-500 transition-colors shadow-sm"
+                          className="absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-zinc-800/90 backdrop-blur rounded-lg text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors shadow-sm"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -247,11 +273,11 @@ const App: React.FC = () => {
 
               {/* Text Input */}
               <div className="relative">
-                 <div className="absolute top-3 left-3 text-gray-400">
+                 <div className="absolute top-3 left-3 text-gray-400 dark:text-gray-500">
                    <Type className="w-4 h-4" />
                  </div>
                  <textarea
-                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 text-sm placeholder:text-gray-400 p-3 pl-9 min-h-[100px] focus:bg-white focus:ring-1 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 outline-none resize-none"
+                  className="w-full rounded-2xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 p-3 pl-9 min-h-[100px] focus:bg-white dark:focus:bg-zinc-800 focus:ring-1 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 outline-none resize-none"
                   placeholder="Write your post caption here..."
                   value={postData.caption}
                   onChange={handleCaptionChange}
@@ -330,7 +356,7 @@ const App: React.FC = () => {
                <button 
                   onClick={handleDownload}
                   disabled={isDownloading}
-                  className="flex items-center gap-1.5 bg-gray-900 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide hover:bg-gray-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-sm active:scale-95"
+                  className="flex items-center gap-1.5 bg-gray-900 dark:bg-zinc-800 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide hover:bg-gray-800 dark:hover:bg-zinc-700 disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-sm active:scale-95"
                >
                  {isDownloading ? (
                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -342,7 +368,7 @@ const App: React.FC = () => {
              </div>
              
              {/* Preview Container - Grey background to make white cards pop */}
-             <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200/60 shadow-inner overflow-hidden">
+             <div className="bg-gray-50 dark:bg-zinc-900 rounded-2xl p-4 border border-gray-200/60 dark:border-zinc-700 shadow-inner overflow-hidden transition-colors duration-300">
                {/* Wrapper for capture - ensure no margins interfere */}
                <div className="flex justify-center w-full">
                  <div ref={mockupRef} className="w-full relative">
